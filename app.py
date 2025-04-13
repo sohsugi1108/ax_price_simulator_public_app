@@ -181,7 +181,7 @@ def plot_projection_graph(area, df_fuel, jepx_avg_2024, df_jepx_power_update, df
     fig2.update_layout(
         height=350,
         margin=dict(l=20, r=20, t=30, b=20),
-        legend=dict(x=0.01, y=0.1)
+        legend=dict(x=0.1, y=0.1)
     )
 
     # Y軸のタイトル設定
@@ -286,7 +286,7 @@ def plot_graphs(df_jepx_mst, df_jepx, df_tso, df_fuel, area, start_date, end_dat
             l=20, r=20, t=50, b=20),
         barmode="stack",
         legend_tracegroupgap=100,
-        legend=dict(y=0.1),
+        legend=dict(x=0.1, y=0.1),
         title={
             "text": "コマ別 価格・電源稼働",
             "font": {"size": 20, "color": "black"}, }
