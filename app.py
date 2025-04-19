@@ -203,6 +203,13 @@ def main():
             create_download_button(
                 df_jepx_mst, df_jepx_power_update, df_fuel_update, area
             )
+        st.markdown(
+            """
+            <div style='font-size: 1.0em; text-align: right; font-style: italic;'>
+                    Powered by 
+                    <span style='color: #666666; font-weight: 500;'>JER</span><span style='color: green; font-weight: 500;'>ACross</span><span style='color: #007BA7; font-weight: 500;'>Digital</span>
+            </div>
+            """, unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
