@@ -1,0 +1,88 @@
+"""ビジネスロジックを担当するモジュール"""
+
+import pandas as pd
+from scipy.interpolate import interp1d
+from data_handlers import get_power_source_parameters
+
+
+def update_power_composition(area: str, df_jepx_input: pd.DataFrame, df_tso_input: pd.DataFrame,
+                             nuclear_ratio: float, solar_ratio: float, fuel_idx_2045: float) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """電源構成を更新し、価格への影響を計算"""
+    # DataFrameのコピーを作成
+    df_jepx = df_jepx_input.copy()
+    df_tso = df_tso_input.copy()
+
+    nuclear_impact = get_power_source_parameters(area, "nuclear")[4]
+    solar_impact = get_power_source_parameters(area, "solar")[4]
+
+    # 年間平均値の計算
+    tso_yearly_avg = df_tso["合計"].mean()
+    df_tso["原子力"] = tso_yearly_avg * (nuclear_ratio / 100)
+
+    # 太陽光の基準値を取得
+    bottom_solar_ratio = get_power_source_parameters(area, 'solar')[0]
+
+    # 価格影響の計算
+    df_jepx["将来価格"] = df_jepx[f"{area}"] + nuclear_ratio * nuclear_impact
+    df_jepx["将来価格"] = df_jepx["将来価格"] + (df_tso["太陽光発電実績"] / df_tso["太陽光発電実績"].mean()) * \
+        (solar_ratio - bottom_solar_ratio) * solar_impact
+
+    # 太陽光発電量の更新
+    df_tso["太陽光発電実績"] = df_tso["太陽光発電実績"] * (solar_ratio / bottom_solar_ratio)
+
+    # 火力の影響を計算
+    df_jepx["thermal_ratio"] = df_tso["火力(合計)"] / df_tso["合計"]
+    df_jepx["将来価格"] = df_jepx["将来価格"] * \
+        ((1 - df_jepx["thermal_ratio"]) +
+         df_jepx["thermal_ratio"] * fuel_idx_2045)
+    df_jepx["将来価格"] = df_jepx["将来価格"].clip(lower=0.01)
+
+    return df_jepx, df_tso
+
+
+def calculate_fuel_price_projection(df_fuel_input: pd.DataFrame, jepx_avg_2024: float,
+                                    df_jepx: pd.DataFrame, df_tso: pd.DataFrame,
+                                    oil_price_ratio: float, exchange_rate_ratio: float) -> pd.DataFrame:
+    """燃料価格の将来推計を計算"""
+    # DataFrameのコピーを作成
+    df_fuel = df_fuel_input.copy()
+
+    # 原油価格の変更を反映
+    column_name = "gas_dol_aeo"
+    oil_change_ratio = oil_price_ratio / \
+        (df_fuel["gas_dol_aeo"].iloc[-1]/df_fuel["gas_dol_aeo"][0])
+    df_fuel["gas_dol_idx"] = (
+        df_fuel["gas_dol_aeo"] / df_fuel["gas_dol_aeo"][0]) * oil_change_ratio
+    df_fuel.loc[0, "gas_dol_idx"] = 1.0
+    df_fuel["gas_dol_aeo"] = df_fuel["gas_dol_aeo"] * df_fuel["gas_dol_idx"]
+
+    # 為替レートの線形補間（2024-2035）と2036-2045の固定値設定
+    df_fuel["yen_per_dol_idx"] = 1.0  # 初期化
+
+    # 2024-2035の線形補間
+    years_to_2035 = 2035 - 2024
+    yearly_change = (exchange_rate_ratio - 1.0) / years_to_2035
+
+    for year in range(2024, 2036):
+        idx = year - 2024
+        df_fuel.loc[df_fuel["year"] == year,
+                    "yen_per_dol_idx"] = 1.0 + (yearly_change * idx)
+
+    # 2036-2045は2035年と同じ値
+    df_fuel.loc[df_fuel["year"] >= 2036,
+                "yen_per_dol_idx"] = exchange_rate_ratio
+
+    # インデックスを為替レートに反映
+    df_fuel["yen_per_dol"] = df_fuel["yen_per_dol"] * \
+        df_fuel["yen_per_dol_idx"]
+
+    # 燃料指数の計算
+    df_fuel['fuel_index'] = df_fuel["gas_dol_idx"] * df_fuel["yen_per_dol_idx"]
+
+    # 火力発電比率を考慮した価格推計
+    thermal_ratio = df_tso["火力(合計)"].mean() / df_tso["合計"].mean()
+    df_fuel["yearly_index"] = thermal_ratio * \
+        df_fuel["fuel_index"] + (1 - thermal_ratio)
+    df_fuel["price_projection"] = jepx_avg_2024 * df_fuel["yearly_index"]
+
+    return df_fuel
