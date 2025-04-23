@@ -50,9 +50,13 @@ def main():
 
         with header_b:
             area = st.selectbox(
-                "エリア選択(Tokyoのみテスト済み)",
-                ["Tokyo", "Hokkaido", "Tohoku", "Chubu", "Hokuriku",
-                    "Kansai", "Chugoku", "Shikoku", "Kyushu"],
+                "エリア選択(一部エリア系統〆待ち)",
+                ["Tokyo", "Hokkaido", "Chubu",
+                    "Kansai", "Chugoku", "Kyushu",
+                    #  "Shikoku",
+                    # "Tohoku",
+                    # "Hokuriku",
+                 ],
                 index=0,
             )
         with header_c:
@@ -120,22 +124,22 @@ def main():
 
             # 燃料価格・為替の設定
             with col_fuel:
-                st.markdown("<b>2045 燃料・為替</b>", unsafe_allow_html=True)
+                st.markdown("<b>2045 為替・燃料</b>", unsafe_allow_html=True)
                 st.markdown(
                     """
                     <div style="display: flex; justify-content: space-between;">
-                        <span>Low</span>
-                        <span>ITI推計(0.88)</span>
-                        <span>High</span>
+                        <span>Low(90円)</span>
+                        <span>MUFG推計(105円)</span>
+                        <span>High(165円)</span>
                     </div>
                     """,
                     unsafe_allow_html=True,
                 )
                 yen_per_dol_idx_update = st.slider(
                     "為替：¥/$,24年比",
-                    0.65,
-                    1.0,
-                    0.88,
+                    0.6,
+                    1.1,
+                    0.7,
                 )
                 # GAS価格シナリオの選択
                 scenario_options = {

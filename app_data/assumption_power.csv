@@ -8,10 +8,10 @@ Tohoku,wind,4,10.5,17,-0.129
 Tokyo,nuclear,0,5.5,11,-0.176
 Tokyo,solar,11,19.5,28,-0.23
 Tokyo,wind,0.3,1.15,2,-0.129
-Chubu,nuclear,0,0,0,-0.176
+Chubu,nuclear,0.0,0.0,0.01,-0.176
 Chubu,solar,13,24.5,36,-0.225
 Chubu,wind,1,2,3,-0.129
-Hokuriku,nuclear,0,0,0,-0.176
+Hokuriku,nuclear,0,0.0,0.01,-0.176
 Hokuriku,solar,6,11,16,-0.331
 Hokuriku,wind,0.3,1.65,3,-0.129
 Kansai,nuclear,35,43,51,-0.254

@@ -250,7 +250,8 @@ def calculate_fuel_price_projection(df_fuel_input: pd.DataFrame, jepx_avg_2024: 
         wind_params = get_power_source_parameters(area, "wind")
 
         # 効果の計算
-        nuclear_effect = nuclear_ratio * nuclear_params[3]
+        nuclear_effect = (
+            nuclear_ratio - nuclear_params[0]) * nuclear_params[3]
         solar_effect = (solar_ratio - solar_params[0]) * solar_params[3]
         wind_effect = (wind_ratio - wind_params[0]) * wind_params[3]
 
