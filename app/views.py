@@ -172,7 +172,7 @@ def create_detail_graph(df_jepx_mst: pd.DataFrame, df_jepx: pd.DataFrame,
     # グラフ設定
     fig.update_yaxes(title_text="JEPX価格（円/kWh）", range=[0, 40], row=1, col=1)
     fig.update_yaxes(title_text="電源稼働量 (MW)", range=[
-                     y_min - 5000, y_max], row=2, col=1)
+                     (- y_max)/2, y_max], row=2, col=1)
     fig.update_xaxes(tickformat="%m/%d %H:%M", row=2, col=1)
     fig.update_layout(
         height=500,
