@@ -143,9 +143,9 @@ def main():
                 )
                 # GAS価格シナリオの選択
                 scenario_options = {
-                    "World Energy Outlook 2024: NetZERO(Japan)": "gas_dol_weo_nze",
-                    # "World Energy Outlook 2024: Mid(Japan)": "gas_dol_weo_aps",
                     "World Energy Outlook 2024: Steps(Japan)": "gas_dol_weo_steps",
+                    "Think Tank(EastAsia)": "gas_dol_rystad_EastAsia",
+                    "Think Tank(TTF)": "gas_dol_rystad_TTF",
                     "U.S. Annual Energy Outlook 2025:(HenryHub)": "gas_dol_aeo",
                     "Original Internal Data(FYI)": "gas_dol"
                 }
@@ -153,7 +153,6 @@ def main():
                     "燃料価格（LNG,$/b）",
                     list(scenario_options.keys()),
                     horizontal=True,  # 横並びで表示
-                    # "World Energy Outlook 2024: High(Japan)"をデフォルトに設定
                     index=2
                 )
                 selected_column = scenario_options[selected_scenario]

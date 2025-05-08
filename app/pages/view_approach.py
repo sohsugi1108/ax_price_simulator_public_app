@@ -16,15 +16,16 @@ def create_approach_view():
 
     #### 想定事象１：電源構成の変化
     - **電源構成**: 原子力・太陽光・風力が全体に占める割合を第七次エネ基を上限として任意に設定
-        - 第７次エネ基（全国）の各電源増加率を各エリアの現状に適用
-        - 但し、原子力は再稼働見通し等元に2045年時上限を作成（https://www.enecho.meti.go.jp/category/electricity_and_gas/nuclear/001/）
-    - **余剰電力の活用**: 原子力・太陽光・風力の増分は、連系線 → 火力抑制（24実績下限まで） → 揚水（24実績最大容量まで） → 再エネ出力制御　の順で調整
+        - 第７次エネ基（全国）の各電源増加率を各エリアの現状に適用（https://www.enecho.meti.go.jp/category/others/basic_plan/pdf/20250218_02.pdf　p.9）
+        - 但し、原子力は再稼働見通し等元に2045年時上限を作成（https://www.enecho.meti.go.jp/category/electricity_and_gas/nuclear/001/　）
+    - **余剰電力の活用**: 原子力・太陽光・風力の増分は、連系線（24実績上限まで）→ 火力抑制（24実績下限まで） → 揚水（24実績最大容量まで） → 再エネ出力制御　の順で調整
     - **価格影響係数**: 原子力・太陽光・風力の増減による価格影響は、エリアごとの回帰分析から算出（”価格影響分析”参照）
 
     #### 想定事象２：燃料・為替の変動
     - **影響範囲**: 将来の燃料価格と為替の変化が、火力稼働分に影響を与えることを想定（価格影響は火力が占める割合のみ）
     - **燃料価格**
-        - World Energy Outlook 2024(Japan,複数シナリオ） https://www.iea.org/reports/world-energy-outlook-2024
+        - World Energy Outlook 2024(Japan） https://www.iea.org/reports/world-energy-outlook-2024
+        - Think Tank：Rystad Energy社公表値　 https://www.rystadenergy.com/insights/whitepaper-forecasting-future-gas-prices
         - U.S. Energy Information Administration Annuarl Energy Outlook 2025 (HenryHub, 単一シナリオ) https://www.eia.gov/outlooks/aeo/?utm_source=chatgpt.com
         - 独自の長期LNG価格想定
     - **為替**: 2024年平均151円に対する比率として設定。最長期でも2035年までの想定であるため、35年まで線形変化ののち横置き
