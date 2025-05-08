@@ -8,11 +8,12 @@ import streamlit as st
 from app.models import generate_yearly_price_data
 from app.pages.view_analysis import create_analysis_view
 from app.pages.view_approach import create_approach_view
+from app.pages.view_nfc_simulation import create_nfc_simulation_view
 
 
 def create_tab_navigation():
     """タブナビゲーションを作成"""
-    return st.tabs(["JEPX長期シミュレーション", "アプローチ解説", "価格影響分析"])
+    return st.tabs(["JEPX長期シミュレーション", "アプローチ解説", "価格影響分析", "(Extra)非化石証書シミュレーション"])
 
 
 def set_page_style():
@@ -22,6 +23,9 @@ def set_page_style():
 
 def create_projection_graph(df_fuel: pd.DataFrame) -> go.Figure:
     """将来価格予測グラフを作成"""
+    # 2035年までのデータにフィルタリング
+    df_fuel = df_fuel[df_fuel["year"] <= 2035].copy()
+
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
     # 棒グラフ: JEPX年平均
@@ -55,7 +59,12 @@ def create_projection_graph(df_fuel: pd.DataFrame) -> go.Figure:
         title="年平均推移",
         height=300,
         margin=dict(l=20, r=20, t=30, b=20),
-        legend=dict(x=0.01, y=0.1)
+        legend=dict(x=0.01, y=0.1),
+        xaxis=dict(
+            range=[2023.75, 2035.25],
+            tickmode='linear',
+            dtick=1
+        )
     )
 
     fig.update_yaxes(
@@ -177,7 +186,7 @@ def create_detail_graph(df_jepx_mst: pd.DataFrame, df_jepx: pd.DataFrame,
     fig.update_layout(
         height=500,
         width=1300,
-        margin=dict(l=20, r=20, t=50, b=20),
+        margin=dict(l=40, r=40, t=50, b=20),
         barmode="relative",
         legend_tracegroupgap=50,
         legend=dict(y=0.1),
@@ -189,14 +198,14 @@ def create_detail_graph(df_jepx_mst: pd.DataFrame, df_jepx: pd.DataFrame,
     return fig
 
 
-def create_download_button(df_jepx_2024: pd.DataFrame, df_jepx_2045: pd.DataFrame,
-                           df_yearly_avg: pd.DataFrame, area: str):
+def create_download_button(df_jepx_2024: pd.DataFrame, df_jepx_future: pd.DataFrame,
+                           df_yearly_prices: pd.DataFrame, area: str):
     """ダウンロードボタンを作成し、クリック時に全期間データを生成してダウンロード"""
     if st.button("全期間データダウンロード"):
         with st.spinner("全期間の価格データを生成中..."):
             # 全期間のデータを生成
             df_all_years = generate_yearly_price_data(
-                df_jepx_2024, df_jepx_2045, df_yearly_avg, area
+                df_jepx_2024, df_jepx_future, df_yearly_prices, area
             )
             # CSVに変換
             csv = df_all_years.to_csv(index=False, encoding="utf-8-sig")
@@ -205,7 +214,7 @@ def create_download_button(df_jepx_2024: pd.DataFrame, df_jepx_2045: pd.DataFram
         st.download_button(
             label="生成されたデータをダウンロード",
             data=csv,
-            file_name=f"jepx_price_{area}_{df_yearly_avg['year'].min()}-{df_yearly_avg['year'].max()}.csv",
+            file_name=f"jepx_price_{area}_{df_yearly_prices['year'].min()}-{df_yearly_prices['year'].max()}.csv",
             mime="text/csv",
             key='download-csv'
         )

@@ -18,7 +18,8 @@ from app.views import (
     create_download_button,
     create_tab_navigation,
     create_analysis_view,
-    create_approach_view  # 追加
+    create_approach_view,  # 追加
+    create_nfc_simulation_view
 )
 
 
@@ -26,7 +27,7 @@ def main():
     """メイン処理"""
     # ページスタイルとタブの設定
     set_page_style()
-    sim_tab, approach_tab, analysis_tab = create_tab_navigation()  # approach_tab を追加
+    sim_tab, approach_tab, analysis_tab, nfc_tab = create_tab_navigation()  # nfc_tab を追加
 
     # 分析タブの表示
     with analysis_tab:
@@ -36,7 +37,11 @@ def main():
     with approach_tab:
         create_approach_view()  # 追加
 
-    # シミュレーションタブの表示（メイン機能）
+    # 非化石証書シミュレーションタブの表示
+    with nfc_tab:
+        create_nfc_simulation_view()
+
+    # JEPXシミュレーションタブの表示（メイン機能）
     with sim_tab:
         # 基本データの読み込み
         df_jepx_mst = load_jepx_data()
@@ -75,7 +80,7 @@ def main():
         jepx_avg_2024 = df_jepx_mst[area].mean()
         df_tso_mst = load_tso_data(area)
         df_fuel_mst = load_fuel_data()
-        fuel_index_2045_mst = df_fuel_mst["fuel_index"].iloc[-1]
+        fuel_index_2035_mst = df_fuel_mst["fuel_index"].iloc[-1]
 
         # 前提シナリオの入力UI
         with col_left:
@@ -89,7 +94,7 @@ def main():
                 solar_params = get_power_source_parameters(area, "solar")
                 wind_params = get_power_source_parameters(area, "wind")
 
-                st.markdown("<b>2045 電源比率（kWhベース,%）</b>",
+                st.markdown("<b>2035 電源比率（kWhベース,%）</b>",
                             unsafe_allow_html=True)
                 st.markdown(
                     """
@@ -124,7 +129,7 @@ def main():
 
             # 燃料価格・為替の設定
             with col_fuel:
-                st.markdown("<b>2045 為替・燃料</b>", unsafe_allow_html=True)
+                st.markdown("<b>2035 為替・燃料</b>", unsafe_allow_html=True)
                 st.markdown(
                     """
                     <div style="display: flex; justify-content: space-between;">
@@ -153,7 +158,7 @@ def main():
                     "燃料価格（LNG,$/b）",
                     list(scenario_options.keys()),
                     horizontal=True,  # 横並びで表示
-                    index=2
+                    index=3
                 )
                 selected_column = scenario_options[selected_scenario]
 
@@ -175,7 +180,8 @@ def main():
         with col_right:
             fig_projection = create_projection_graph(df_fuel_update)
             st.plotly_chart(fig_projection, use_container_width=True)
-            price_projection_2045 = df_fuel_update["price_projection"].iloc[-1]
+            price_projection_2035 = df_fuel_update[df_fuel_update["year"]
+                                                   == 2035]["price_projection"].iloc[0]
 
         # 期間指定データの準備
         df_tso_filtered = filter_data_by_date_range(
@@ -199,12 +205,15 @@ def main():
         with header_d:
             st.metric(label="2024平均価格 (円/kWh)", value=round(jepx_avg_2024, 2))
         with header_e:
-            st.metric(label="2045想定価格 (円/kWh)",
-                      value=round(price_projection_2045, 2))
+            st.metric(label="2035想定価格 (円/kWh)",
+                      value=round(price_projection_2035, 2))
         with header_f:
-            # ダウンロードボタンに渡す引数を変更
+            # ダウンロードボタンを作成
             create_download_button(
-                df_jepx_mst, df_jepx_power_update, df_fuel_update, area
+                df_jepx_mst,            # 2024年のデータ
+                df_jepx_power_update,   # 将来の時系列データ
+                df_fuel_update[["year", "price_projection"]],  # 年平均価格のデータ
+                area
             )
         st.markdown(
             """

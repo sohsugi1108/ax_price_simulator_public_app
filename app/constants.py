@@ -16,7 +16,7 @@ SHOW_DAYS = 7
 
 # 期間設定
 MIN_YEAR = int(os.getenv("MIN_YEAR", "2024"))
-MAX_YEAR = int(os.getenv("MAX_YEAR", "2045"))
+MAX_YEAR = int(os.getenv("MAX_YEAR", "2035"))
 
 # グラフ色設定
 POWER_SOURCE_COLORS = {

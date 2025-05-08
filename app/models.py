@@ -9,7 +9,7 @@ from app.data_handlers import get_power_source_parameters
 @st.cache_data
 def update_power_composition(area: str, df_jepx_input: pd.DataFrame, df_tso_input: pd.DataFrame,
                              nuclear_ratio: float, solar_ratio: float, wind_ratio: float,
-                             fuel_idx_2045: float) -> tuple[pd.DataFrame, pd.DataFrame]:
+                             fuel_idx_2035: float) -> tuple[pd.DataFrame, pd.DataFrame]:
     """電源構成を更新し、価格への影響を計算"""
     df_jepx = df_jepx_input.copy()
     df_tso = df_tso_input.copy()
@@ -193,7 +193,7 @@ def update_power_composition(area: str, df_jepx_input: pd.DataFrame, df_tso_inpu
 
     # 火力の影響
     thermal_ratio = (df_tso["火力(合計)"] / df_tso["合計"]).values
-    future_price *= (1 - thermal_ratio) + (thermal_ratio * fuel_idx_2045)
+    future_price *= (1 - thermal_ratio) + (thermal_ratio * fuel_idx_2035)
 
     # 計算結果をDataFrameに反映
     df_jepx["将来価格"] = future_price
@@ -257,28 +257,30 @@ def calculate_fuel_price_projection(df_fuel_input: pd.DataFrame, jepx_avg_2024: 
 
         # 進捗率をベクトル化
         progress = np.where(years < 2024, 0,
-                            np.minimum(1, (years - 2024) / (2045 - 2024)))
+                            np.minimum(1, (years - 2024) / (2035 - 2024)))
 
         # 効果を一括で適用
         total_effect = (nuclear_effect + solar_effect + wind_effect) * progress
         df_fuel["price_projection"] += total_effect
 
-    return df_fuel
+    # 2035年までのデータにフィルタリング
+    return df_fuel[df_fuel["year"] <= 2035].copy()
 
 
-def generate_yearly_price_data(df_jepx_2024: pd.DataFrame, df_jepx_2045: pd.DataFrame,
-                               df_yearly_avg: pd.DataFrame, area: str) -> pd.DataFrame:
-    """2024年から2045年までの各年の価格データを生成"""
+def generate_yearly_price_data(df_jepx_2024: pd.DataFrame, df_jepx_future: pd.DataFrame,
+                               df_yearly_prices: pd.DataFrame, area: str) -> pd.DataFrame:
+    """2024年から2035年までの各年の価格データを生成"""
     all_years_data = []
     start_year = 2024
-    end_year = 2045
+    end_year = 2035
 
-    # 2024年と2045年の価格データを準備
+    # 2024年と2035年の価格データを準備
     price_2024 = df_jepx_2024[area].values
-    price_2045 = df_jepx_2045["将来価格"].values
+    price_future = df_jepx_future["将来価格"].values
 
     # 年平均価格を辞書に変換
-    avg_prices = df_yearly_avg.set_index('year')['price_projection'].to_dict()
+    avg_prices = df_yearly_prices.set_index(
+        'year')['price_projection'].to_dict()
 
     # 2024年のデータを追加
     df_2024_output = df_jepx_2024[['日時']].copy()
@@ -286,21 +288,21 @@ def generate_yearly_price_data(df_jepx_2024: pd.DataFrame, df_jepx_2045: pd.Data
     df_2024_output['価格'] = price_2024
     all_years_data.append(df_2024_output)
 
-    # 2025年から2044年までのデータを生成
+    # 2025年から2034年までのデータを生成
     for year in range(start_year + 1, end_year):
-        # 線形補間
-        ratio = (year - start_year) / (end_year - start_year)
-        interpolated_price = price_2024 + (price_2045 - price_2024) * ratio
+        # 2024年の価格パターンを基に変動パターンを生成
+        base_pattern = price_2024 / np.mean(price_2024)  # 2024年の価格変動パターン
+        target_avg = avg_prices.get(year)  # その年の目標平均価格
 
-        # 年平均価格で補正
-        current_avg = np.mean(interpolated_price)
-        target_avg = avg_prices.get(year, current_avg)  # 年平均データがない場合は補間値の平均を使う
-
-        if current_avg > 0:  # ゼロ除算を回避
-            correction_factor = target_avg / current_avg
-            corrected_price = interpolated_price * correction_factor
+        # 変動パターンを適用して価格を生成
+        if target_avg is not None:
+            corrected_price = base_pattern * target_avg
         else:
-            corrected_price = interpolated_price  # 平均が0の場合は補正しない
+            # 年平均データがない場合は線形補間を使用
+            ratio = (year - start_year) / (end_year - start_year)
+            avg_price = np.mean(
+                price_2024) + (np.mean(price_future) - np.mean(price_2024)) * ratio
+            corrected_price = base_pattern * avg_price
 
         # 0.01円未満をクリップ
         corrected_price = np.maximum(corrected_price, 0.01)
@@ -313,17 +315,27 @@ def generate_yearly_price_data(df_jepx_2024: pd.DataFrame, df_jepx_2045: pd.Data
         df_year['価格'] = corrected_price
         all_years_data.append(df_year)
 
-    # 2045年のデータを追加
-    df_2045_output = df_jepx_2045[['日時']].copy()
-    # 日時を2045年に更新
-    df_2045_output['日時'] = df_2045_output['日時'].apply(
+    # 2035年のデータを追加
+    base_pattern = price_2024 / np.mean(price_2024)  # 2024年の価格変動パターン
+    target_avg = df_yearly_prices[df_yearly_prices["year"]
+                                  == end_year]["price_projection"].iloc[0]
+    corrected_price = base_pattern * target_avg
+    corrected_price = np.maximum(corrected_price, 0.01)  # 価格の下限を設定
+
+    # 2035年のDataFrameを作成
+    df_future_output = df_jepx_2024[['日時']].copy()
+    df_future_output['日時'] = df_future_output['日時'].apply(
         lambda dt: dt.replace(year=end_year))
-    df_2045_output['エリア'] = area
-    df_2045_output['価格'] = price_2045
-    df_2045_output['価格'] = df_2045_output['価格'].clip(lower=0.01)  # 2045年もクリップ
-    all_years_data.append(df_2045_output)
+    df_future_output['エリア'] = area
+    df_future_output['価格'] = corrected_price
+    all_years_data.append(df_future_output)
 
     # 全データを結合
     df_final = pd.concat(all_years_data, ignore_index=True)
+
+    # 日付を暦年表示に修正（4月以降のデータは翌年として表示）
+    df_final['日時'] = df_final['日時'].apply(
+        lambda dt: dt.replace(year=dt.year + 1) if dt.month >= 4 else dt
+    )
 
     return df_final
