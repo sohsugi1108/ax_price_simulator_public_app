@@ -47,12 +47,14 @@ def create_projection_graph(df_fuel: pd.DataFrame) -> go.Figure:
     }
 
     for name, info in indices.items():
-        fig.add_trace(go.Scatter(
-            x=df_fuel["year"],
-            y=df_fuel[info["column"]]*100,
-            name=name,
-            line=dict(color=info["color"], width=2)
-        ), secondary_y=False)
+        column = info["column"]
+        if column in df_fuel.columns:  # 列が存在する場合のみ描画
+            fig.add_trace(go.Scatter(
+                x=df_fuel["year"],
+                y=df_fuel[column]*100,
+                name=name,
+                line=dict(color=info["color"], width=2)
+            ), secondary_y=False)
 
     # レイアウト設定
     fig.update_layout(

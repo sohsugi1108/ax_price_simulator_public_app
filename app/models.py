@@ -212,9 +212,13 @@ def calculate_fuel_price_projection(df_fuel_input: pd.DataFrame, jepx_avg_2024: 
     df_fuel = df_fuel_input.copy()
 
     # ガス価格インデックスの計算（ベクトル化）
-    base_price = df_fuel[price_scenario_name].iloc[0]
-    df_fuel["gas_dol_idx"] = df_fuel[price_scenario_name] / base_price
-    df_fuel.iloc[0, df_fuel.columns.get_loc("gas_dol_idx")] = 1.0
+    try:
+        base_price = df_fuel[price_scenario_name].iloc[0]
+        df_fuel["gas_dol_idx"] = df_fuel[price_scenario_name] / base_price
+        df_fuel.iloc[0, df_fuel.columns.get_loc("gas_dol_idx")] = 1.0
+    except (KeyError, ValueError) as e:
+        print(f"ガス価格インデックスの計算中にエラーが発生: {e}")
+        df_fuel["gas_dol_idx"] = 1.0  # エラー時はデフォルト値として1.0を設定
 
     # 為替レートの計算（ベクトル化）
     years = df_fuel["year"].values
