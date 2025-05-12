@@ -134,14 +134,18 @@ def create_nfc_simulation_view():
             price = 0.4
         nfc_prices.append(price)
 
+    # Filter data until 2035
+    filtered_result = result[result["year"] <= 2035]
+    filtered_prices = nfc_prices[:len(filtered_result)]
+
     # Display graphs in second and third columns
     with col2:
         # Demand and Supply graph
         fig_demand_supply = go.Figure()
         fig_demand_supply.add_trace(
-            go.Bar(x=result["year"], y=result["demand"]/1000000, name="需要", marker_color="lightblue"))
+            go.Bar(x=filtered_result["year"], y=filtered_result["demand"]/1000000, name="需要", marker_color="lightblue"))
         fig_demand_supply.add_trace(
-            go.Bar(x=result["year"], y=result["supply"]/1000000, name="供給", marker_color="lightgreen"))
+            go.Bar(x=filtered_result["year"], y=filtered_result["supply"]/1000000, name="供給", marker_color="lightgreen"))
         fig_demand_supply.update_layout(
             title=dict(
                 text="非化石証書需給（GWh,対数表示）",
@@ -165,7 +169,7 @@ def create_nfc_simulation_view():
         # NFC price graph
         fig_nfc_price = go.Figure()
         fig_nfc_price.add_trace(
-            go.Scatter(x=result["year"], y=nfc_prices, mode="lines", name="非化石証書価格"))
+            go.Scatter(x=filtered_result["year"], y=filtered_prices, mode="lines", name="非化石証書価格"))
         fig_nfc_price.update_layout(
             title=dict(
                 text="非化石証書価格推移 (円/kWh)",
