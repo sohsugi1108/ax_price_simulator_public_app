@@ -99,7 +99,7 @@ def create_nfc_simulation_view():
             """
             <div style="display: flex; justify-content: space-between;">
                 <span>国内中央値</span>
-                <span>先進国NetZero宣言</span>
+                <span>先進国NetZero(31000)</span>
                 <span>高位</span>
             </div>
             """,

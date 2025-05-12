@@ -152,7 +152,7 @@ def main():
                     "Think Tank(EastAsia)": "gas_dol_rystad_EastAsia",
                     "Think Tank(TTF)": "gas_dol_rystad_TTF",
                     "U.S. Annual Energy Outlook 2025:(HenryHub)": "gas_dol_aeo",
-                    "Original Internal Data(FYI)": "gas_dol"
+                    # "Original Internal Data(FYI)": "gas_dol"
                 }
                 selected_scenario = st.radio(
                     "燃料価格（LNG,$/b）",
