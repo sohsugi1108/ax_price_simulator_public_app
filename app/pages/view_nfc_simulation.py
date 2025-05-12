@@ -4,7 +4,6 @@ import plotly.graph_objects as go
 
 # Load data
 data = pd.read_csv("app_data/nfc_actual.csv")
-icp_data = pd.read_csv("app_data/icp_prospect.csv")
 
 
 def calculate_cagr(start_value, end_value, periods):
@@ -23,17 +22,6 @@ def extend_data(data, demand_cagr, supply_cagr):
         supply.append(supply[-1] * (1 + supply_cagr))
 
     return pd.DataFrame({"year": years, "demand": demand, "supply": supply})
-
-
-def get_adjusted_icp_values(carbon_price):
-    """ICPの推移を計算する"""
-    # 2050年の値に対する調整係数を計算
-    scale_factor = carbon_price / icp_data['price'].iloc[-1]
-    # 2024年の値を基準とした比率に調整係数を適用
-    base_value = icp_data['price'].iloc[0]
-    adjusted_values = [(v / base_value) * scale_factor *
-                       base_value for v in icp_data['price']]
-    return pd.DataFrame({'year': icp_data['year'], 'price': adjusted_values})
 
 # Simulation logic
 
@@ -116,7 +104,7 @@ def create_nfc_simulation_view():
             unsafe_allow_html=True,
         )
         carbon_price = st.slider(
-            "ICP", 5000, 40000, 35000, key="carbon_price")
+            "ICP", 5000, 40000, 31000, key="carbon_price")
 
     # Run simulation after all sliders are defined
     result = simulate(demand_cagr, supply_cagr, emission_factor, carbon_price)
@@ -127,17 +115,17 @@ def create_nfc_simulation_view():
         0.000438 + (emission_factor - 0.000438) * (year - 2024) / (2050 - 2024)
         for year in emission_years
     ]
+    carbon_values = [
+        5000 + (carbon_price - 5000) * (year - 2024) / (2050 - 2024)
+        for year in emission_years
+    ]
 
-    # Get adjusted ICP values
-    adjusted_icp = get_adjusted_icp_values(carbon_price)
-
-    # Calculate NFC price with adjusted ICP values
+    # Calculate NFC price with linear changes
     nfc_prices = []
     for i, row in result.iterrows():
         year = row["year"]
         year_emission = emission_values[i]
-        year_carbon = adjusted_icp.loc[adjusted_icp['year']
-                                       == year, 'price'].iloc[0]
+        year_carbon = carbon_values[i]
 
         # Calculate price based on emission and carbon values, with 0.4 minimum
         if row["demand"] > row["supply"]:
@@ -162,7 +150,7 @@ def create_nfc_simulation_view():
                 y=0.95
             ),
             barmode="group",
-            height=350,
+            height=400,
             yaxis_type="log",
             legend=dict(
                 orientation="h",
@@ -174,30 +162,6 @@ def create_nfc_simulation_view():
         st.plotly_chart(fig_demand_supply, use_container_width=True)
 
     with col3:
-        # ICP trend graph
-        fig_icp = go.Figure()
-        fig_icp.add_trace(
-            go.Scatter(x=adjusted_icp["year"], y=adjusted_icp["price"],
-                       mode="lines", name="ICP推移"))
-        fig_icp.update_layout(
-            title=dict(
-                text="ICP推移 (円/t-CO2)",
-                xanchor="center",
-                x=0.5,
-                y=0.95
-            ),
-            height=350,
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=-0.3,
-                xanchor="center",
-                x=0.5
-            ),
-            yaxis=dict(range=[0, 40000])
-        )
-        st.plotly_chart(fig_icp, use_container_width=True)
-
         # NFC price graph
         fig_nfc_price = go.Figure()
         fig_nfc_price.add_trace(
@@ -209,14 +173,12 @@ def create_nfc_simulation_view():
                 x=0.5,
                 y=0.95
             ),
-            height=350,
+            height=400,
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
                 y=-0.15,
                 xanchor="center",
                 x=0.5
-            ),
-            yaxis=dict(range=[0, 6.0])
-        )
+            ))
         st.plotly_chart(fig_nfc_price, use_container_width=True)
