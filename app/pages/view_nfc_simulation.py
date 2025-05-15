@@ -156,7 +156,7 @@ def create_nfc_simulation_view():
         fig_demand_supply.add_trace(
             go.Bar(x=filtered_data["year"], y=filtered_data["supply"]/1000000, name="供給", marker_color="lightgreen"))
         fig_demand_supply.update_layout(
-            xaxis=dict(range=[2024, 2035]),
+            xaxis=dict(range=[2023.5, 2035.5]),
             title=dict(
                 text="非化石証書需給（GWh,対数表示）",
                 xanchor="center",
@@ -181,6 +181,7 @@ def create_nfc_simulation_view():
         fig_nfc_price.add_trace(
             go.Scatter(x=filtered_result["year"], y=filtered_prices, mode="lines", name="非化石証書価格"))
         fig_nfc_price.update_layout(
+            xaxis=dict(range=[2023.5, 2035.5]),
             title=dict(
                 text="非化石証書価格推移 (円/kWh)",
                 xanchor="center",
