@@ -34,6 +34,7 @@ def simulate(demand_cagr, supply_cagr, emission_factor, carbon_price):
         if row["demand"] > row["supply"]:
             extended_data.at[i, "price"] = emission_factor * carbon_price
 
+    extended_data["exceed"] = extended_data["demand"] > extended_data["supply"]
     return extended_data
 
 
@@ -142,10 +143,17 @@ def create_nfc_simulation_view():
     with col2:
         # Demand and Supply graph
         fig_demand_supply = go.Figure()
+        filtered_data = result.copy()
+        exceed_rows = filtered_data[filtered_data["demand"]
+                                    > filtered_data["supply"]]
+        if not exceed_rows.empty:
+            exceed_year = exceed_rows.iloc[0]["year"]
+            filtered_data.loc[filtered_data["year"] >
+                              exceed_year, ["demand", "supply"]] = None
         fig_demand_supply.add_trace(
-            go.Bar(x=filtered_result["year"], y=filtered_result["demand"]/1000000, name="需要", marker_color="lightblue"))
+            go.Bar(x=filtered_data["year"], y=filtered_data["demand"]/1000000, name="需要", marker_color="lightblue"))
         fig_demand_supply.add_trace(
-            go.Bar(x=filtered_result["year"], y=filtered_result["supply"]/1000000, name="供給", marker_color="lightgreen"))
+            go.Bar(x=filtered_data["year"], y=filtered_data["supply"]/1000000, name="供給", marker_color="lightgreen"))
         fig_demand_supply.update_layout(
             title=dict(
                 text="非化石証書需給（GWh,対数表示）",
@@ -155,7 +163,7 @@ def create_nfc_simulation_view():
             ),
             barmode="group",
             height=400,
-            yaxis_type="log",
+            # yaxis_type="log",
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
@@ -178,6 +186,7 @@ def create_nfc_simulation_view():
                 y=0.95
             ),
             height=400,
+            yaxis=dict(range=[0, 6]),
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
