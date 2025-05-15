@@ -19,7 +19,7 @@ def extend_data(data, demand_cagr, supply_cagr):
 
     for _ in years[1:]:
         demand.append(demand[-1] * (1 + demand_cagr))
-        supply.append(supply[-1] * (1 + supply_cagr))
+        supply.append(max(0, supply[-1] * (1 + supply_cagr)))
 
     return pd.DataFrame({"year": years, "demand": demand, "supply": supply})
 
@@ -74,7 +74,7 @@ def create_nfc_simulation_view():
             unsafe_allow_html=True,
         )
         supply_cagr = st.slider("CAGR(%)",
-                                0.0, 200.0, 0.0, key="supply_cagr")/100
+                                -25.0, 200.0, 0.0, key="supply_cagr")/100
 
         # Emission factor slider with comments
         st.markdown("###### 排出係数 2050年想定 (kg-CO2/kWh)")

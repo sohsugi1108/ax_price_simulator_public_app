@@ -21,13 +21,14 @@ def create_approach_view():
     - **余剰電力の活用**: 原子力・太陽光・風力の増分は、連系線（24実績上限まで）→ 火力抑制（24実績下限まで） → 揚水（24実績最大容量まで） → 再エネ出力制御　の順で調整
     - **価格影響係数**: 原子力・太陽光・風力の増減による価格影響は、エリアごとの回帰分析から算出（”価格影響分析”参照）
 
-    #### 想定事象２：燃料・為替の変動
+    #### 想定事象２：燃料・為替の変動（重要：直近大きく変更される可能性あるため要注視。最新動向反映予定）
     - **影響範囲**: 将来の燃料価格と為替の変化が、火力稼働分に影響を与えることを想定（価格影響は火力が占める割合のみ）
-    - **燃料価格**
-        - World Energy Outlook 2024(Japan） https://www.iea.org/reports/world-energy-outlook-2024
-        - Think Tank：Rystad Energy社公表値　 https://www.rystadenergy.com/insights/whitepaper-forecasting-future-gas-prices
-        - U.S. Energy Information Administration Annuarl Energy Outlook 2025 (HenryHub, 単一シナリオ) https://www.eia.gov/outlooks/aeo/?utm_source=chatgpt.com
-        - 独自の長期LNG価格想定
+    - **燃料価格**: 各機関の以下推計に加えて、Carbon Pricingを適用
+        - **燃料価格推計**
+            - World Energy Outlook 2024(Japan） https://www.iea.org/reports/world-energy-outlook-2024
+            - Think Tank：Rystad Energy社公表値　 https://www.rystadenergy.com/insights/whitepaper-forecasting-future-gas-prices
+            - U.S. Energy Information Administration Annuarl Energy Outlook 2025 (HenryHub, 単一シナリオ) https://www.eia.gov/outlooks/aeo/?utm_source=chatgpt.com
+        - **カーボンプライシング**: 現状5000円から、2050年35000円（先進国Net Zero宣言を参考に作成）へ推移すると想定
     - **為替**: 2024年平均151円に対する比率として設定
         - Base: 106円 (24年比0.7)：MUFG「日本経済の中期見通し」https://www.murc.jp/wp-content/uploads/2023/09/medium_2309_01.pdf
         - High: 165円 (24年比1.1)：第一生命経済研究所「AIが予測するトランプ政権下のドル円相場」基本シナリオ https://www.dlri.co.jp/report/ld/387997.html?utm_source=chatgpt.com
