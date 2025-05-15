@@ -144,6 +144,7 @@ def create_nfc_simulation_view():
         # Demand and Supply graph
         fig_demand_supply = go.Figure()
         filtered_data = result.copy()
+        filtered_data = filtered_data[filtered_data["year"] <= 2035]
         exceed_rows = filtered_data[filtered_data["demand"]
                                     > filtered_data["supply"]]
         if not exceed_rows.empty:
@@ -155,6 +156,7 @@ def create_nfc_simulation_view():
         fig_demand_supply.add_trace(
             go.Bar(x=filtered_data["year"], y=filtered_data["supply"]/1000000, name="供給", marker_color="lightgreen"))
         fig_demand_supply.update_layout(
+            xaxis=dict(range=[2024, 2035]),
             title=dict(
                 text="非化石証書需給（GWh,対数表示）",
                 xanchor="center",
